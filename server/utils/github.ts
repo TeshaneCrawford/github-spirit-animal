@@ -134,21 +134,37 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
 export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
   const userData = await fetchUserProfile(_event, username)
   const repositories = await fetchUserRepositories(_event, username, userData.login)
+
   if (!repositories || repositories.length === 0) {
     throw new Error('No repositories found for the user.')
   }
-  const activity = await fetchUserActivity(_event, username, userData.login, repositories[0].name)
+
+  const firstRepo = repositories[0]
+  if (!firstRepo?.name) {
+    throw new Error('Invalid repository data.')
+  }
+
+  const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
   if (!activity || activity.length === 0) {
     throw new Error('No activity found for the repository.')
   }
+
   const { data: commits } = await useOctokit().request('GET /repos/{owner}/{repo}/commits', {
     owner: userData.login,
-    repo: repositories[0].name,
+    repo: firstRepo.name,
   })
+
   if (!commits || commits.length === 0) {
     throw new Error('No commits found for the repository.')
   }
-  const commit = await fetchCommitHistory(_event, username, userData.login, repositories[0].name, commits[0].sha)
+
+  const firstCommit = commits[0]
+  if (!firstCommit?.sha) {
+    throw new Error('Invalid commit data.')
+  }
+
+  const commit = await fetchCommitHistory(_event, username, userData.login, firstRepo.name, firstCommit.sha)
+
   return {
     userData,
     repositories,
