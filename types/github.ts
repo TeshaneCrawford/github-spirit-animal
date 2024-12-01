@@ -70,3 +70,67 @@ export interface AnimalProfile {
     consistency?: 'high' | 'medium' | 'low'
   }
 }
+
+/**
+ * Represents a GitHub event from the API
+ */
+export interface GitHubEvent {
+  id: string
+  type: string | null
+  actor: {
+    id: number
+    login: string
+    display_login?: string
+    gravatar_id: string | null
+    url: string
+    avatar_url: string
+  }
+  repo: {
+    id: number
+    name: string
+    url: string
+  }
+  org?: {
+    id: number
+    login: string
+    gravatar_id: string | null
+    url: string
+    avatar_url: string
+  }
+  payload: GitHubEventPayload
+  public: boolean
+  created_at: string | null
+}
+
+export interface GitHubEventPayload {
+  action?: string
+  ref?: string
+  ref_type?: string
+  size?: number
+  commits?: Array<{
+    sha: string
+    message: string
+    author: { name: string, email: string }
+  }>
+  pull_request?: {
+    number: number
+    state: string
+    title: string
+  }
+  issue?: {
+    number: number
+    title: string
+    state: string
+  }
+}
+
+export interface GitHubError extends Error {
+  status?: number
+  response?: {
+    status: number
+    data: {
+      message: string
+      documentation_url?: string
+    }
+  }
+}
