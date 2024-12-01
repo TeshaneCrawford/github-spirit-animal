@@ -1,5 +1,6 @@
 import type { TimelineData, GitHubError } from '~~/types/github'
 import { fetchUserProfile, useOctokit } from '~~/server/utils/github'
+import { groupEventsByDay, fillTimelineGaps, TimePeriods } from '~~/utils/datetime'
 
 /**
  * GitHub Social Analytics Endpoint
@@ -34,26 +35,19 @@ export default defineEventHandler(async (event): Promise<{
           per_page: 100,
         })
 
-        const relevantEvents = events.filter(event =>
-          event.type === eventType,
-        )
+        // Filter and process events with running total
+        const relevantEvents = events
+          .filter(event => event.type === eventType && event.created_at)
+          .sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime())
 
-        const timelineData: TimelineData[] = []
-        let count = currentCount
-
-        relevantEvents.reverse().forEach((event) => {
-          if (!event.created_at) return
-
-          const date = event.created_at.split('T')[0]
-          count += event.type === 'FollowEvent' ? 1 : -1
-
-          timelineData.push({
-            date,
-            count: Math.max(0, count), // Ensure count never goes below 0
-          })
+        // Calculate running totals starting from current count
+        let runningCount = currentCount
+        const timeline = groupEventsByDay(relevantEvents, (event) => {
+          runningCount += event.type === 'FollowEvent' ? 1 : -1
+          return runningCount
         })
 
-        return timelineData
+        return fillTimelineGaps(timeline, TimePeriods.MONTH)
       }
       catch (error) {
         console.error('Failed to fetch historical data:', error)
@@ -61,9 +55,11 @@ export default defineEventHandler(async (event): Promise<{
       }
     }
 
-    // Fetch both followers and following history
-    const followersHistory = await fetchHistoricalData('FollowEvent', userProfile.followers)
-    const followingHistory = await fetchHistoricalData('FollowEvent', userProfile.following)
+    // Fetch both histories with proper event types
+    const [followersHistory, followingHistory] = await Promise.all([
+      fetchHistoricalData('FollowEvent', userProfile.followers),
+      fetchHistoricalData('FollowEvent', userProfile.following),
+    ])
 
     return {
       followers: followersHistory,
