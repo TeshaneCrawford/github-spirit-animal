@@ -21,6 +21,7 @@
     "@nuxt/icon": "^1.9.0",
     "@nuxthub/core": "^0.8.7",
     "@nuxtjs/color-mode": "3.5.2",
+    "@radix-ui/colors": "^3.0.0",
     "nuxt": "^3.14.1592",
     "nuxt-og-image": "^4.0.0",
     "octokit": "^4.0.2",
