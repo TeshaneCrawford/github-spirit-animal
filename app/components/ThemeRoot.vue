@@ -8,6 +8,13 @@ const themeClasses = computed(() => [
   `theme-${themeStore.currentTheme}`,
   themeStore.colorMode.value,
 ])
+
+// Update HTML class when color mode changes
+watchEffect(() => {
+  if (import.meta.client) {
+    document.documentElement.classList.toggle('dark', themeStore.colorMode.value === 'dark')
+  }
+})
 </script>
 
 <template>
@@ -19,11 +26,11 @@ const themeClasses = computed(() => [
 
 <style>
 /* Base light/dark styles */
-:root {
+html {
   @apply bg-gray-1 text-gray-12;
 }
 
-:root.dark {
+html.dark {
   @apply bg-gray-dark-1 text-gray-dark-12;
 }
 
