@@ -27,9 +27,14 @@ export default defineNuxtConfig({
   },
 
   colorMode: {
-    preference: 'system',
-    fallback: 'light',
     classSuffix: '',
+    fallback: 'light',
+    // Add storage key to match app.config.ts
+    storageKey: 'github-spirit-color-mode',
+    // Use custom preference detection
+    preference: 'system',
+    // Enable data-theme attribute
+    dataValue: 'theme',
   },
 
   // Env variables - https://nuxt.com/docs/getting-started/configuration#environment-variables-and-private-tokens
