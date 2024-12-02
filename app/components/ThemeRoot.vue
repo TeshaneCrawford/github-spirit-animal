@@ -27,11 +27,11 @@ watchEffect(() => {
 <style>
 /* Base light/dark styles */
 html {
-  @apply bg-gray-1 text-gray-12;
+  @apply bg-gray-1 text-gray-950;
 }
 
 html.dark {
-  @apply bg-gray-dark-1 text-gray-dark-12;
+  @apply dark:bg-gray-950 dark:text-gray-1;
 }
 
 /* Animal-specific theme styles for components */

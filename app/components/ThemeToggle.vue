@@ -14,7 +14,7 @@ const label = computed(() => `Switch to ${themeStore.colorMode.value === 'dark' 
   <button
     class="fixed bottom-4 right-4 rounded-full p-2 transition-colors duration-300"
     :class="[
-      themeStore.colorMode.value === 'dark' ? 'bg-gray-dark-3 hover:bg-gray-dark-4' : 'bg-gray-3 hover:bg-gray-4',
+      themeStore.colorMode.value === 'dark' ? 'dark:bg-gray-3 dark:hover:bg-gray-4' : 'bg-gray-3 hover:bg-gray-4',
     ]"
     :aria-label="label"
     @click="themeStore.toggleColorMode()"
