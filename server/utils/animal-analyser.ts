@@ -13,6 +13,7 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
     name: 'Wolf',
     traits: ['collaborative', 'night-focused', 'team-oriented'],
     color: '#4A4A4A',
+    emoji: 'fluent-emoji:wolf',
     conditions: {
       minPRs: 5,
       activityPattern: 'nocturnal',
@@ -23,6 +24,7 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
     name: 'Cat',
     traits: ['independent', 'precise', 'selective'],
     color: '#FFA500',
+    emoji: 'fluent-emoji:cat',
     conditions: {
       minIssues: 3,
       activityPattern: 'crepuscular',
@@ -33,6 +35,7 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
     name: 'Beaver',
     traits: ['consistent', 'hardworking', 'structured'],
     color: '#8B4513',
+    emoji: 'fluent-emoji:beaver',
     conditions: {
       minCommits: 10,
       activityPattern: 'diurnal',
@@ -43,6 +46,7 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
     name: 'Owl',
     traits: ['analytical', 'nocturnal', 'wise'],
     color: '#483D8B',
+    emoji: 'fluent-emoji:owl',
     conditions: {
       minPRs: 2,
       activityPattern: 'nocturnal',
@@ -130,6 +134,7 @@ export function analyzeGitHubSpirit(
     percentage: calculateAnimalMatch(profile, activity, pattern, consistency),
     traits: profile.traits,
     color: profile.color,
+    emoji: profile.emoji,
   }))
 
   // Sort by percentage descending and normalize to ensure total is 100%

@@ -33,6 +33,7 @@ export interface AnimalCharacteristic {
   percentage: number
   traits: string[]
   color: string
+  emoji: string
 }
 
 export interface UserProfile {
@@ -59,6 +60,7 @@ export interface AnimalProfile {
   name: string
   traits: string[]
   color: string
+  emoji: string
   conditions: {
     minCommits?: number
     maxCommits?: number
