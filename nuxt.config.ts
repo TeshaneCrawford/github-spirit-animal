@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     '@unocss/nuxt',
     '@vueuse/nuxt',
     'reka-ui/nuxt',
+    '@pinia/nuxt',
   ],
 
   ssr: true,

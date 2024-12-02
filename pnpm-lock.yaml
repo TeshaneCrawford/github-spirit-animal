@@ -23,6 +23,9 @@ importers:
       '@nuxtjs/color-mode':
         specifier: 3.5.2
         version: 3.5.2(magicast@0.3.5)(rollup@4.24.4)(webpack-sources@3.2.3)
+      '@pinia/nuxt':
+        specifier: 0.8.0
+        version: 0.8.0(magicast@0.3.5)(pinia@2.2.8(typescript@5.6.3)(vue@3.5.13(typescript@5.6.3)))(rollup@4.24.4)(webpack-sources@3.2.3)
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -35,6 +38,9 @@ importers:
       octokit:
         specifier: ^4.0.2
         version: 4.0.2
+      pinia:
+        specifier: ^2.2.7
+        version: 2.2.8(typescript@5.6.3)(vue@3.5.13(typescript@5.6.3))
       reka-ui:
         specifier: 1.0.0-alpha.5
         version: 1.0.0-alpha.5(vue@3.5.13(typescript@5.6.3))
@@ -1432,6 +1438,11 @@ packages:
   '@parcel/watcher@2.4.1':
     resolution: {integrity: sha512-HNjmfLQEVRZmHRET336f20H/8kOozUGwk7yajvsonjNxbj2wBTK1WsQuHkD5yYh9RxFGL2EyDHryOihOwUoKDA==}
     engines: {node: '>= 10.0.0'}
+
+  '@pinia/nuxt@0.8.0':
+    resolution: {integrity: sha512-BWPUKOg3KGnRSgz54x9IUzCKTqUxZx4UJezPRbRwY5BVt18rfiP4Cqq8kxtR8WWDZa5PTRJpx0Jxz+qyUdLvjQ==}
+    peerDependencies:
+      pinia: ^2.2.7
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -4133,6 +4144,18 @@ packages:
   picomatch@4.0.2:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
     engines: {node: '>=12'}
+
+  pinia@2.2.8:
+    resolution: {integrity: sha512-NRTYy2g+kju5tBRe0oNlriZIbMNvma8ZJrpHsp3qudyiMEA8jMmPPKQ2QMHg0Oc4BkUyQYWagACabrwriCK9HQ==}
+    peerDependencies:
+      '@vue/composition-api': ^1.4.0
+      typescript: '>=4.4.4'
+      vue: ^2.6.14 || ^3.5.11
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+      typescript:
+        optional: true
 
   pkg-types@1.2.1:
     resolution: {integrity: sha512-sQoqa8alT3nHjGuTjuKgOnvjo4cljkufdtLMnO2LBP/wRwuDlo1tkaEdMxCRhyGRPacv/ztlZgDPm2b7FAmEvw==}
@@ -6949,6 +6972,16 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.4.1
       '@parcel/watcher-win32-ia32': 2.4.1
       '@parcel/watcher-win32-x64': 2.4.1
+
+  '@pinia/nuxt@0.8.0(magicast@0.3.5)(pinia@2.2.8(typescript@5.6.3)(vue@3.5.13(typescript@5.6.3)))(rollup@4.24.4)(webpack-sources@3.2.3)':
+    dependencies:
+      '@nuxt/kit': 3.14.1592(magicast@0.3.5)(rollup@4.24.4)(webpack-sources@3.2.3)
+      pinia: 2.2.8(typescript@5.6.3)(vue@3.5.13(typescript@5.6.3))
+    transitivePeerDependencies:
+      - magicast
+      - rollup
+      - supports-color
+      - webpack-sources
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -10296,6 +10329,14 @@ snapshots:
   picomatch@2.3.1: {}
 
   picomatch@4.0.2: {}
+
+  pinia@2.2.8(typescript@5.6.3)(vue@3.5.13(typescript@5.6.3)):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.13(typescript@5.6.3)
+      vue-demi: 0.14.10(vue@3.5.13(typescript@5.6.3))
+    optionalDependencies:
+      typescript: 5.6.3
 
   pkg-types@1.2.1:
     dependencies:
