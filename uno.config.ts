@@ -57,7 +57,12 @@ export default defineConfig({
   presets: [
     presetUno(),
     presetAttributify(),
-    presetIcons(),
+    presetIcons({
+      extraProperties: {
+        // Avoid crushing of icons in crowded situations
+        'min-width': '1.2em',
+      },
+    }),
     presetTypography(),
     presetWebFonts({
       fonts: {
