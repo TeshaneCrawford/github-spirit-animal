@@ -22,11 +22,11 @@ export const useThemeStore = defineStore('theme', () => {
   })
 
   // Update theme based on dominant spirit animal characteristics
-  function setThemeFromAnimals(animals: AnimalCharacteristic[]) {
+  function setThemeFromAnimals(animals: Pick<AnimalCharacteristic, 'animal' | 'percentage'>[]) {
     const dominantAnimal = animals[0]
     if (dominantAnimal) {
       currentTheme.value = dominantAnimal.animal.toLowerCase()
-      animalProfiles.value = animals
+      animalProfiles.value = animals as AnimalCharacteristic[]
     }
   }
 
