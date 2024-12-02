@@ -14,11 +14,11 @@ const label = computed(() => `Switch to ${themeStore.colorMode.value === 'dark' 
   <button
     class="fixed bottom-4 right-4 rounded-full p-2 transition-colors duration-300"
     :class="[
-      themeStore.colorMode.value === 'dark' ? 'hover:bg-purple-5' : 'hover:bg-orange-5',
+      themeStore.colorMode.value === 'dark' ? 'bg-gray-dark-3 hover:bg-gray-dark-4' : 'bg-gray-3 hover:bg-gray-4',
     ]"
     :aria-label="label"
     @click="themeStore.toggleColorMode()"
   >
-    <Icon :name="icon" class="h-6 w-6" />
+    <Icon :name="icon" class="h-6 w-6" :style="{ color: 'var(--theme-primary)' }" />
   </button>
 </template>

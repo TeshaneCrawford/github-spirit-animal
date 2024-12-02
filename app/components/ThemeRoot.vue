@@ -18,32 +18,49 @@ const themeClasses = computed(() => [
 </template>
 
 <style>
-/* Animal-specific theme styles with light/dark variants */
+/* Base light/dark styles */
+:root {
+  @apply bg-gray-1 text-gray-12;
+}
+
+:root.dark {
+  @apply bg-gray-dark-1 text-gray-dark-12;
+}
+
+/* Animal-specific theme styles for components */
 .theme-wolf {
-  @apply bg-red-1 text-red-12;
+  --theme-primary: var(--red9);
+  --theme-secondary: var(--red11);
 }
 .theme-wolf.dark {
-  @apply bg-red-dark-1 text-red-dark-12;
+  --theme-primary: var(--redDark9);
+  --theme-secondary: var(--redDark11);
 }
 
 .theme-cat {
-  @apply bg-orange-1 text-orange-12;
+  --theme-primary: var(--orange9);
+  --theme-secondary: var(--orange11);
 }
 .theme-cat.dark {
-  @apply bg-orange-dark-1 text-orange-dark-12;
+  --theme-primary: var(--orangeDark9);
+  --theme-secondary: var(--orangeDark11);
 }
 
 .theme-beaver {
-  @apply bg-brown-1 text-brown-12;
+  --theme-primary: var(--brown9);
+  --theme-secondary: var(--brown11);
 }
 .theme-beaver.dark {
-  @apply bg-brown-dark-1 text-brown-dark-12;
+  --theme-primary: var(--brownDark9);
+  --theme-secondary: var(--brownDark11);
 }
 
 .theme-owl {
-  @apply bg-purple-1 text-purple-12;
+  --theme-primary: var(--purple9);
+  --theme-secondary: var(--purple11);
 }
 .theme-owl.dark {
-  @apply bg-purple-dark-1 text-purple-dark-12;
+  --theme-primary: var(--purpleDark9);
+  --theme-secondary: var(--purpleDark11);
 }
 </style>

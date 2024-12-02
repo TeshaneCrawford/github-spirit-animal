@@ -39,6 +39,16 @@ const animalThemes = {
   },
 }
 
+// Add neutral colors for light/dark mode
+const baseTheme = {
+  light: {
+    ...radixToCustomProperties(colors.gray),
+  },
+  dark: {
+    ...radixToCustomProperties(colors.grayDark),
+  },
+}
+
 export default defineConfig({
   shortcuts: [
     // ...
@@ -50,6 +60,7 @@ export default defineConfig({
     },
     colors: {
       theme: {
+        ...baseTheme.light,
         ...animalThemes.wolf,
       },
     },
