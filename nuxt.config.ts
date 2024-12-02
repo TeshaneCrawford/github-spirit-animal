@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     '@unocss/nuxt',
     '@vueuse/nuxt',
+    'reka-ui/nuxt',
   ],
 
   ssr: true,
