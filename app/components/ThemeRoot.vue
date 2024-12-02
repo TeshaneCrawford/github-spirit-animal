@@ -25,15 +25,6 @@ watchEffect(() => {
 </template>
 
 <style>
-/* Base light/dark styles */
-html {
-  @apply bg-gray-1 text-gray-950;
-}
-
-html.dark {
-  @apply dark:bg-gray-950 dark:text-gray-1;
-}
-
 /* Animal-specific theme styles for components */
 .theme-wolf {
   --theme-primary: var(--red9);

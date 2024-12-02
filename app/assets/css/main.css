@@ -1,0 +1,17 @@
+html {
+  background-color: #fff;
+  color: #111;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.dark {
+  color-scheme: dark;
+  background: #111;
+  color: #fff;
+}
+
+body {
+  min-height: 100vh;
+}
