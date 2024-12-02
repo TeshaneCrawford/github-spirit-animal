@@ -3,19 +3,19 @@ import { useThemeStore } from '~/stores/theme'
 
 const themeStore = useThemeStore()
 
+// Dynamic icon based on current color mode
 const icon = computed(() => themeStore.colorMode.value === 'dark'
   ? 'lucide:moon-star'
   : 'lucide:sun-medium',
 )
+
+// Accessibility label for screen readers
 const label = computed(() => `Switch to ${themeStore.colorMode.value === 'dark' ? 'light' : 'dark'} mode`)
 </script>
 
 <template>
   <button
-    class="fixed bottom-4 right-4 rounded-full p-2 transition-colors duration-300"
-    :class="[
-      themeStore.colorMode.value === 'dark' ? 'dark:bg-gray-3 dark:hover:bg-gray-4' : 'bg-gray-3 hover:bg-gray-4',
-    ]"
+    class="fixed bottom-4 right-4 transition-colors duration-300"
     :aria-label="label"
     @click="themeStore.toggleColorMode()"
   >

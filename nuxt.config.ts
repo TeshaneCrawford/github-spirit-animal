@@ -31,8 +31,6 @@ export default defineNuxtConfig({
     fallback: 'light',
     // Add storage key to match app.config.ts
     storageKey: 'github-spirit-color-mode',
-    // Use custom preference detection
-    preference: 'system',
     // Enable data-theme attribute
     dataValue: 'theme',
   },

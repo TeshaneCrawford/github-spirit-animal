@@ -1,17 +1,56 @@
+/* Import Radix UI color scales for base theming */
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/gray-dark.css';
+@import '@radix-ui/colors/blue.css';
+@import '@radix-ui/colors/blue-dark.css';
+
+/* 
+ * Design System Color Tokens
+ * ------------------------
+ * These variables define our core color palette and are used
+ * throughout the application to maintain consistent theming.
+ *
+ * --background: Base page color, provides foundation for content
+ * --foreground: Primary content color, used for main text
+ * --muted: Subdued text and borders, used for secondary information
+ * --accent: Highlighted elements, used for interactive components
+ *
+ * Font scaling variables control responsive typography:
+ * --font-scale: Controls the intensity of font size changes
+ * --font-adjust: Calculates the responsive adjustment based on viewport
+ */
+:root {
+  --background: var(--gray1);
+  --foreground: var(--gray12);
+  --muted: var(--gray11);
+  --accent: var(--blue9);
+  --font-scale: 0.1;
+  --font-adjust: calc(0.5vw * var(--font-scale));
+}
+
+/* 
+ * Core Typography and Layout
+ * ------------------------
+ * Base styles that define the fundamental visual hierarchy
+ * and ensure consistent text rendering across browsers
+ */
 html {
-  background-color: #fff;
-  color: #111;
+  background-color: var(--background);
+  color: var(--foreground);
   overflow-x: hidden;
   overflow-y: scroll;
   -webkit-tap-highlight-color: transparent;
+  font-size: clamp(16px, calc(16px + var(--font-adjust)), 18px); /* Clamp to prevent extremes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark mode overrides */
 html.dark {
   color-scheme: dark;
-  background: #111;
-  color: #fff;
 }
 
+/* Ensure full-height layout */
 body {
   min-height: 100vh;
 }

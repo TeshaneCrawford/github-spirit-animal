@@ -16,7 +16,7 @@ const loadingColor = computed(() => {
 </script>
 
 <template>
-  <body class="font-sans antialiased">
+  <body class="dark font-sans antialiased">
     <ThemeRoot>
       <NuxtRouteAnnouncer />
       <!-- Theme-aware loading indicator -->

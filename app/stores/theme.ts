@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { AnimalCharacteristic } from '~~/types/github'
 
-// Animals that should trigger dark mode automatically
+// Animals that naturally prefer dark mode based on activity patterns
 const NOCTURNAL_ANIMALS = ['owl', 'wolf']
 
 export const useThemeStore = defineStore('theme', () => {
@@ -9,19 +9,19 @@ export const useThemeStore = defineStore('theme', () => {
   const currentTheme = ref<string>('wolf')
   const animalProfiles = ref<AnimalCharacteristic[]>([])
 
-  // Track if current animal should use dark mode by default
+  // Reactive check for nocturnal animals to handle theme switching
   const isNocturnal = computed(() =>
     NOCTURNAL_ANIMALS.includes(currentTheme.value),
   )
 
-  // Automatically switch to dark mode for nocturnal animals
+  // Automatically adapt color scheme based on animal characteristics
   watch(currentTheme, (newTheme) => {
     if (NOCTURNAL_ANIMALS.includes(newTheme)) {
       colorMode.preference = 'dark'
     }
   })
 
-  // Update theme based on dominant spirit animal characteristics
+  // Sets the active theme based on the most dominant animal characteristic
   function setThemeFromAnimals(animals: Pick<AnimalCharacteristic, 'animal' | 'percentage'>[]) {
     const dominantAnimal = animals[0]
     if (dominantAnimal) {
@@ -30,7 +30,7 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
-  // Toggle between light and dark mode while preserving animal theme
+  // Toggles between light and dark mode while maintaining the current animal theme
   function toggleColorMode() {
     colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
   }

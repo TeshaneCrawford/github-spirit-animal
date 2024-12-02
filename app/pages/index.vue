@@ -11,11 +11,23 @@ function setAnimal(animal: typeof animals[number]) {
 
 <template>
   <main class="p-8">
-    <!-- Theme test card -->
-    <div class="mx-auto max-w-md border border-gray-200 rounded-lg p-6 space-y-6 dark:border-gray-800">
-      <h1 class="text-2xl font-bold" style="color: var(--theme-secondary)">
+    <div class="mx-auto max-w-md border border-[--gray6] rounded-lg p-6 space-y-6">
+      <h1 class="text-responsive-3xl font-bold" style="color: var(--theme-secondary)">
         Theme Tester
       </h1>
+
+      <!-- Typography demo -->
+      <div class="space-y-4">
+        <p class="text-responsive-base">
+          Large text example
+        </p>
+        <p class="text-responsive-sm">
+          Normal text example
+        </p>
+        <p class="text-responsive-xs">
+          Smaller text example
+        </p>
+      </div>
 
       <!-- Animal selector buttons -->
       <div class="flex flex-wrap gap-2">
@@ -24,7 +36,7 @@ function setAnimal(animal: typeof animals[number]) {
           :key="animal"
           class="rounded-full px-4 py-2 transition-colors duration-300"
           :class="[
-            themeStore.currentTheme === animal ? 'bg-current text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800',
+            themeStore.currentTheme === animal ? 'text-white' : 'hover:bg-[--gray5]',
           ]"
           :style="themeStore.currentTheme === animal ? { backgroundColor: 'var(--theme-primary)' } : {}"
           @click="setAnimal(animal)"
