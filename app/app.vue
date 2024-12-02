@@ -16,11 +16,13 @@ const loadingColor = computed(() => {
 </script>
 
 <template>
-  <ThemeRoot>
-    <NuxtRouteAnnouncer />
-    <!-- Theme-aware loading indicator -->
-    <NuxtLoadingIndicator :color="loadingColor" :height="3" />
-    <NuxtPage />
-    <ThemeToggle />
-  </ThemeRoot>
+  <body class="font-sans antialiased">
+    <ThemeRoot>
+      <NuxtRouteAnnouncer />
+      <!-- Theme-aware loading indicator -->
+      <NuxtLoadingIndicator :color="loadingColor" :height="3" />
+      <NuxtPage />
+      <ThemeToggle />
+    </ThemeRoot>
+  </body>
 </template>
