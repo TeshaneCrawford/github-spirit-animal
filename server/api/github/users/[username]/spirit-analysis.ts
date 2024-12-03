@@ -1,11 +1,11 @@
 import type { SpiritAnimalProfile, UserActivity, DailyActivity, GitHubEvent, GitHubError } from '~~/types/github'
-import { fetchUserStats } from '~~/server/utils/github'
+import { fetchUserStats, fetchActivityMetrics } from '~~/server/utils/github'
 import { analyzeGitHubSpirit, determineActivityPattern, calculateConsistency } from '~~/server/utils/animal-analyser'
 import { checkRateLimit } from '~~/server/utils/rate-limit'
 
 /**
- * Calculates user's current activity metrics from GitHub events
- * Aggregates different types of contributions into a unified activity profile
+ * Aggregates user's GitHub contributions into activity metrics
+ * Tracks different types of contributions for spirit animal analysis
  */
 function calculateCurrentActivity(activity: GitHubEvent[], repoCount: number): UserActivity {
   return {
@@ -17,6 +17,28 @@ function calculateCurrentActivity(activity: GitHubEvent[], repoCount: number): U
     contributions: activity.length,
     timestamp: new Date().toISOString(),
   }
+}
+
+/**
+ * Creates a 2D activity intensity map
+ * Used to determine user's work patterns and schedule preferences
+ */
+function generateActivityHeatmap(events: GitHubEvent[]): DailyActivity[] {
+  return events.reduce((acc: DailyActivity[], event) => {
+    if (!event.created_at) return acc
+    const date = new Date(event.created_at)
+    const day = date.getDay()
+    const hour = date.getHours()
+    const existingEntry = acc.find(a => a.day === day && a.hour === hour)
+
+    if (existingEntry) {
+      existingEntry.intensity = Math.min(4, existingEntry.intensity + 1)
+    }
+    else {
+      acc.push({ day, hour, intensity: 1 })
+    }
+    return acc
+  }, [])
 }
 
 /**
@@ -36,52 +58,92 @@ export default defineEventHandler(async (event): Promise<SpiritAnimalProfile> =>
     })
   }
 
-  await checkRateLimit(event)
-
   try {
-    const stats = await fetchUserStats(event, username)
+    console.log('Starting spirit analysis for:', username)
 
-    if (!stats || !stats.activity) {
-      throw createError({
-        statusCode: 404,
-        message: 'No activity data found for this user',
-      })
+    // Check rate limit first
+    const rateLimit = await checkRateLimit(event)
+    console.log('Rate limit status:', rateLimit)
+
+    const [stats, activityMetrics] = await Promise.all([
+      fetchUserStats(event, username).catch((err) => {
+        console.error('Stats fetch error:', err)
+        return null
+      }),
+      fetchActivityMetrics(event, username).catch((err) => {
+        console.error('Metrics fetch error:', err)
+        return null
+      }),
+    ])
+
+    console.log('Raw stats data:', {
+      hasStats: !!stats,
+      repoCount: stats?.repositories?.length,
+      hasMetrics: !!activityMetrics,
+      commitCount: activityMetrics?.commitPatterns?.length,
+    })
+
+    console.log('Data fetched - Stats:', !!stats, 'Metrics:', !!activityMetrics)
+
+    // Return default profile for users with no activity
+    if (!stats && !activityMetrics) {
+      return {
+        animals: [],
+        dominantTraits: [],
+        activityPattern: 'diurnal',
+        consistency: 'low',
+      }
     }
 
-    const currentActivity = calculateCurrentActivity(stats.activity, stats.repositories.length)
-    const activityHeatmap = stats.activity.reduce((acc: DailyActivity[], event) => {
-      if (!event.created_at) return acc
+    const allActivities = [
+      ...(activityMetrics?.commitPatterns || []),
+      ...(activityMetrics?.prActivity || []),
+      ...(activityMetrics?.issueActivity || []),
+    ]
 
-      const date = new Date(event.created_at)
-      const day = date.getDay()
-      const hour = date.getHours()
-      const existingEntry = acc.find(a => a.day === day && a.hour === hour)
+    const repoCount = stats?.repositories?.length || 0
 
-      if (existingEntry) {
-        existingEntry.intensity = Math.min(4, existingEntry.intensity + 1)
+    if (allActivities.length === 0) {
+      return {
+        animals: [],
+        dominantTraits: [],
+        activityPattern: 'diurnal', // default pattern
+        consistency: 'low', // default consistency
       }
-      else {
-        acc.push({ day, hour, intensity: 1 })
-      }
-      return acc
-    }, [])
+    }
+
+    const currentActivity = calculateCurrentActivity(allActivities, repoCount)
+    const activityHeatmap = generateActivityHeatmap(allActivities)
 
     const animals = await analyzeGitHubSpirit(currentActivity, activityHeatmap)
+    console.log('Analyzed animals:', animals)
+
     const allTraits = animals.flatMap(a => a.traits)
     const dominantTraits = [...new Set(allTraits)].slice(0, 5)
 
-    return {
+    const result = {
       animals,
       dominantTraits,
       activityPattern: determineActivityPattern(activityHeatmap),
       consistency: calculateConsistency(currentActivity),
     }
+
+    console.log('Final result:', result)
+    return result
   }
   catch (error: unknown) {
+    console.error('Spirit analysis complete error:', error)
     const githubError = error as GitHubError
+
+    // Provide more specific error messages
+    const errorMessage = githubError.response?.data?.message
+      || githubError.message
+      || 'Failed to analyze GitHub activity'
+
     throw createError({
       statusCode: githubError.status || githubError.response?.status || 500,
-      message: githubError.message || 'Failed to fetch user data',
+      message: errorMessage,
+      cause: error,
     })
   }
 })
