@@ -1,11 +1,12 @@
 import type { ActivityStats, UserActivity, DailyActivity, GitHubEvent, GitHubError, ActivityTrends } from '~~/types/github'
-import { fetchUserStats } from '~~/server/utils/github'
+import { fetchUserStats, fetchActivityMetrics } from '~~/server/utils/github'
 import { checkRateLimit } from '~~/server/utils/rate-limit'
 import { calculateCodeQuality, calculateEngagement } from '~~/server/utils/metrics'
 
 /**
- * Calculates activity metrics for a specific time period
- * @param days Number of days to look back
+ * Calculates contribution metrics for a specific time window
+ * @param activities Array of GitHub events to analyze
+ * @param days Number of days to include in analysis
  */
 function calculateActivityMetrics(activities: GitHubEvent[], days: number): UserActivity {
   const cutoffDate = new Date()
@@ -50,8 +51,8 @@ function generateActivityHeatmap(activities: GitHubEvent[]): DailyActivity[] {
 }
 
 /**
- * Analyzes activity patterns and calculates trend metrics
- * Includes daily averages, growth rates, and peak activity times
+ * Analyzes user's contribution patterns and timing
+ * Used to identify peak activity periods and work habits
  */
 function calculateActivityTrends(activities: GitHubEvent[]): ActivityTrends {
   const activityByDay = new Array(7).fill(0)
@@ -73,7 +74,8 @@ function calculateActivityTrends(activities: GitHubEvent[]): ActivityTrends {
 }
 
 /**
- * Calculates week-over-week activity growth rate as a percentage
+ * Measures activity growth by comparing recent vs previous week
+ * Returns percentage change in activity level
  */
 function calculateWeeklyGrowthRate(activities: GitHubEvent[]): number {
   const thisWeek = activities.filter(e =>
@@ -120,25 +122,34 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
   await checkRateLimit(event)
 
   try {
-    const stats = await fetchUserStats(event, username)
-    if (!stats || !stats.activity) {
+    const [stats, activityMetrics] = await Promise.all([
+      fetchUserStats(event, username),
+      fetchActivityMetrics(event, username),
+    ])
+
+    if (!stats || !activityMetrics || !activityMetrics.commitPatterns) {
       throw createError({
         statusCode: 404,
-        message: 'No activity data found for this user',
+        message: 'Incomplete activity data found for this user',
       })
     }
 
+    const allActivities = [
+      ...activityMetrics.commitPatterns,
+      ...activityMetrics.prActivity,
+      ...activityMetrics.issueActivity,
+    ]
+
     const baseStats = {
       current: {
-        daily: calculateActivityMetrics(stats.activity, 1),
-        weekly: calculateActivityMetrics(stats.activity, 7),
-        monthly: calculateActivityMetrics(stats.activity, 30),
+        daily: calculateActivityMetrics(allActivities, 1),
+        weekly: calculateActivityMetrics(allActivities, 7),
+        monthly: calculateActivityMetrics(allActivities, 30),
       },
-      heatmap: generateActivityHeatmap(stats.activity),
+      heatmap: generateActivityHeatmap(allActivities),
     }
 
-    // Add activity trend analysis
-    const trends = calculateActivityTrends(stats.activity)
+    const trends = calculateActivityTrends(allActivities)
 
     // Calculate enhanced metrics
     const [codeQuality, engagement] = await Promise.all([
