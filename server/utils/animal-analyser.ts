@@ -62,6 +62,10 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
  * - Crepuscular: Active during twilight hours or mixed patterns
  */
 function determineActivityPattern(activityHeatmap: DailyActivity[]): 'diurnal' | 'nocturnal' | 'crepuscular' {
+  if (!activityHeatmap || activityHeatmap.length === 0) {
+    return 'diurnal' // default pattern if no data
+  }
+
   const dayHours = activityHeatmap.filter(a => a.hour >= 6 && a.hour <= 18)
   const nightHours = activityHeatmap.filter(a => a.hour < 6 || a.hour > 18)
 
@@ -80,6 +84,10 @@ function determineActivityPattern(activityHeatmap: DailyActivity[]): 'diurnal' |
  * - Low: Below threshold or irregular patterns
  */
 function calculateConsistency(activity: UserActivity): 'high' | 'medium' | 'low' {
+  if (!activity || !activity.commits) {
+    return 'low' // default consistency if no activity
+  }
+
   const dailyAverage = activity.commits / 7
   const threshold = dailyAverage * 0.5
 
@@ -98,6 +106,10 @@ function calculateConsistency(activity: UserActivity): 'high' | 'medium' | 'low'
  * - Contribution consistency
  */
 function calculateAnimalMatch(profile: AnimalProfile, activity: UserActivity, pattern: string, consistency: 'high' | 'medium' | 'low'): number {
+  if (!activity || !profile) {
+    return 0 // no match if missing data
+  }
+
   let score = 0
   const { conditions } = profile
 
@@ -119,6 +131,10 @@ export function analyzeGitHubSpirit(
   activity: UserActivity,
   activityHeatmap: DailyActivity[],
 ): AnimalCharacteristic[] {
+  if (!activity || !activityHeatmap) {
+    return [] // return empty array if no data
+  }
+
   const pattern = determineActivityPattern(activityHeatmap)
   const consistency = calculateConsistency(activity)
 
