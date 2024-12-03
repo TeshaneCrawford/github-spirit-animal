@@ -1,8 +1,11 @@
 import type { H3Event } from 'h3'
 import { Octokit } from 'octokit'
+import type { UserProfileData, GitHubError } from '~~/types/github'
 
 // Singleton instance of Octokit client
 let _octokit: Octokit
+
+const GITHUB_API_BASE = 'https://api.github.com'
 
 /**
  * Returns a singleton instance of Octokit client
@@ -23,18 +26,40 @@ export function useOctokit() {
  * @returns User profile data
  * @cache 10 minutes with stale-while-revalidate
  */
-export const fetchUserProfile = defineCachedFunction(async (_event: H3Event, username: string) => {
-  const { data: userData } = await useOctokit().request('GET /user/{username}', {
-    username,
-  })
-  return userData
-}, {
-  maxAge: 60 * 10,
-  swr: true,
-  group: 'github',
-  name: 'fetchUserProfile',
-  getKey: (_event: H3Event, username: string) => username,
-})
+export async function fetchUserProfile(event: H3Event, username: string): Promise<UserProfileData> {
+  const config = useRuntimeConfig()
+
+  try {
+    const userData = await $fetch<UserProfileData>(`${GITHUB_API_BASE}/users/${username}`, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${config.githubToken}`,
+      },
+    })
+
+    if (!userData || !userData.login) {
+      throw new Error('Invalid user data received')
+    }
+
+    return {
+      avatar_url: userData.avatar_url,
+      name: userData.name,
+      login: userData.login,
+      bio: userData.bio,
+      blog: userData.blog,
+      twitter_username: userData.twitter_username,
+      followers: userData.followers,
+      following: userData.following,
+      created_at: userData.created_at,
+    }
+  }
+  catch (error) {
+    throw createError({
+      statusCode: (error as GitHubError).status || 500,
+      message: (error as Error).message || 'Failed to fetch user profile',
+    })
+  }
+}
 
 /**
  * Fetches and caches a user's repositories
@@ -132,44 +157,37 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
  * @cache 10 minutes with stale-while-revalidate
  */
 export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
-  const userData = await fetchUserProfile(_event, username)
-  const repositories = await fetchUserRepositories(_event, username, userData.login)
+  try {
+    console.log('Fetching stats for user:', username)
+    const userData = await fetchUserProfile(_event, username)
+    console.log('User profile fetched:', !!userData)
 
-  if (!repositories || repositories.length === 0) {
-    throw new Error('No repositories found for the user.')
+    const repositories = await fetchUserRepositories(_event, username, userData.login)
+    console.log('Repositories fetched:', repositories?.length || 0)
+
+    if (!repositories?.length) {
+      return {
+        userData,
+        repositories: [],
+        activity: [],
+        commit: null,
+      }
+    }
+
+    const firstRepo = repositories[0]
+    const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
+    console.log('Activity fetched:', activity?.length || 0)
+
+    return {
+      userData,
+      repositories,
+      activity: activity || [],
+      commit: null, // Make commit optional
+    }
   }
-
-  const firstRepo = repositories[0]
-  if (!firstRepo?.name) {
-    throw new Error('Invalid repository data.')
-  }
-
-  const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
-  if (!activity || activity.length === 0) {
-    throw new Error('No activity found for the repository.')
-  }
-
-  const { data: commits } = await useOctokit().request('GET /repos/{owner}/{repo}/commits', {
-    owner: userData.login,
-    repo: firstRepo.name,
-  })
-
-  if (!commits || commits.length === 0) {
-    throw new Error('No commits found for the repository.')
-  }
-
-  const firstCommit = commits[0]
-  if (!firstCommit?.sha) {
-    throw new Error('Invalid commit data.')
-  }
-
-  const commit = await fetchCommitHistory(_event, username, userData.login, firstRepo.name, firstCommit.sha)
-
-  return {
-    userData,
-    repositories,
-    activity,
-    commit,
+  catch (error) {
+    console.error('Error in fetchUserStats:', error)
+    throw error
   }
 }, {
   maxAge: 60 * 10,
@@ -177,4 +195,88 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
   group: 'github',
   name: 'fetchUserStats',
   getKey: (_event: H3Event, username: string) => username,
+})
+
+/**
+ * Fetches social network activity and growth metrics
+ * @param username GitHub username
+ * @returns Object containing:
+ * - Current follower/following counts
+ * - Recent social events (follows, watches, etc.)
+ * - Interaction patterns with other users
+ */
+export const fetchSocialTrends = defineCachedFunction(async (_event: H3Event, username: string) => {
+  const octokit = useOctokit()
+
+  // Get follower/following events
+  const { data: events } = await octokit.request('GET /users/{username}/events', {
+    username,
+    per_page: 100,
+  })
+
+  // Get current follower/following lists for comparison
+  const [followers, following] = await Promise.all([
+    octokit.request('GET /users/{username}/followers', { username }),
+    octokit.request('GET /users/{username}/following', { username }),
+  ])
+
+  return {
+    currentStats: {
+      followers: followers.data.length,
+      following: following.data.length,
+    },
+    events: events.filter(e =>
+      e.type === 'FollowEvent'
+      || e.type === 'WatchEvent'
+      || e.type === 'PublicEvent',
+    ),
+  }
+}, {
+  maxAge: 60 * 10,
+  swr: true,
+  group: 'github',
+  name: 'fetchSocialTrends',
+  getKey: (_event: H3Event, username: string) => `social-${username}`,
+})
+
+/**
+ * Fetches and analyzes user's coding behavior patterns
+ * Used for spirit animal matching and activity profiling
+ * @param username GitHub username
+ * @returns Object containing categorized activity metrics:
+ * - Commit patterns and frequency
+ * - PR creation and review activity
+ * - Issue participation and comments
+ */
+export const fetchActivityMetrics = defineCachedFunction(async (_event: H3Event, username: string) => {
+  try {
+    console.log('Fetching activity metrics for:', username)
+    const octokit = useOctokit()
+
+    const { data: events } = await octokit.request('GET /users/{username}/events', {
+      username,
+      per_page: 100,
+    })
+    console.log('Events fetched:', events?.length || 0)
+
+    return {
+      commitPatterns: events.filter(e => e.type === 'PushEvent') || [],
+      prActivity: events.filter(e => e.type === 'PullRequestEvent') || [],
+      issueActivity: events.filter(e => e.type === 'IssuesEvent') || [],
+      comments: events.filter(e =>
+        e.type === 'IssueCommentEvent'
+        || e.type === 'CommitCommentEvent',
+      ) || [],
+    }
+  }
+  catch (error) {
+    console.error('Error in fetchActivityMetrics:', error)
+    throw error
+  }
+}, {
+  maxAge: 60 * 10,
+  swr: true,
+  group: 'github',
+  name: 'fetchActivityMetrics',
+  getKey: (_event: H3Event, username: string) => `metrics-${username}`,
 })
