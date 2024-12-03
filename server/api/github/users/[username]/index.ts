@@ -11,7 +11,17 @@ export default defineEventHandler(async (event): Promise<UserProfileData> => {
   }
 
   try {
-    const profile = await fetchUserProfile(event, username)
+    const profile = await fetchUserProfile(event, username) as {
+      avatar_url: string
+      name: string
+      login: string
+      bio: string
+      blog: string
+      twitter_username: string
+      followers: number
+      following: number
+      created_at: string
+    }
     return {
       avatar_url: profile.avatar_url,
       name: profile.name,
