@@ -1,3 +1,4 @@
+/** Represents a GitHub user's basic profile information */
 export interface GitHubUser {
   login: string
   name: string | null
@@ -12,6 +13,7 @@ export interface GitHubUser {
   created_at: string
 }
 
+/** Tracks user activity metrics aggregated over a specific time period */
 export interface UserActivity {
   commits: number
   pullRequests: number
@@ -22,12 +24,19 @@ export interface UserActivity {
   timestamp: string
 }
 
+/**
+ * Maps user activity to specific time slots in a week
+ * day: 0 (Sunday) through 6 (Saturday)
+ * hour: 0-23 representing hour of day
+ * intensity: Activity level from 0 (none) to 4 (very high)
+ */
 export interface DailyActivity {
   day: number // 0-6 (Sunday-Saturday)
   hour: number // 0-23
   intensity: number // 0-4 (level of activity)
 }
 
+/** Defines the spirit animal match and associated characteristics */
 export interface AnimalCharacteristic {
   animal: string
   percentage: number
@@ -36,6 +45,7 @@ export interface AnimalCharacteristic {
   emoji: string
 }
 
+/** Central user profile containing all analyzed data and metrics */
 export interface UserProfile {
   user: GitHubUser
   activities: {
@@ -48,14 +58,20 @@ export interface UserProfile {
   activityHeatmap: DailyActivity[]
   followersHistory: TimelineData[]
   followingHistory: TimelineData[]
+  metrics: SpiritAnimalMetrics
+  activityTrends: ActivityTrends
 }
 
+/** Historical data point with date and count */
 export interface TimelineData {
   date: string
   count: number
 }
 
-// Animal profile configuration
+/**
+ * Defines criteria and characteristics for matching users to spirit animals
+ * Includes activity thresholds and behavioral patterns
+ */
 export interface AnimalProfile {
   name: string
   traits: string[]
@@ -74,7 +90,8 @@ export interface AnimalProfile {
 }
 
 /**
- * Represents a GitHub event from the API
+ * Raw GitHub event data from the API
+ * Used to analyze user behavior and calculate metrics
  */
 export interface GitHubEvent {
   id: string
@@ -104,6 +121,7 @@ export interface GitHubEvent {
   created_at: string | null
 }
 
+/** Payload data structure for different types of GitHub events */
 export interface GitHubEventPayload {
   action?: string
   ref?: string
@@ -126,6 +144,7 @@ export interface GitHubEventPayload {
   }
 }
 
+/** Extended error type for GitHub API specific errors */
 export interface GitHubError extends Error {
   status?: number
   response?: {
@@ -135,4 +154,74 @@ export interface GitHubError extends Error {
       documentation_url?: string
     }
   }
+}
+
+/** Simplified user profile data used for the main API endpoint */
+export interface UserProfileData {
+  avatar_url: string
+  name: string | null
+  login: string
+  bio: string | null
+  blog: string | null
+  twitter_username: string | null
+  followers: number
+  following: number
+  created_at: string
+}
+
+/** Collection of current activity statistics and metrics */
+export interface ActivityStats {
+  current: {
+    daily: UserActivity
+    weekly: UserActivity
+    monthly: UserActivity
+  }
+  heatmap: DailyActivity[]
+  codeQuality: CodeQualityMetrics
+  engagement: EngagementMetrics
+}
+
+/** Results of spirit animal analysis including behavioral patterns */
+export interface SpiritAnimalProfile {
+  animals: AnimalCharacteristic[]
+  dominantTraits: string[]
+  activityPattern: 'diurnal' | 'nocturnal' | 'crepuscular'
+  consistency: 'high' | 'medium' | 'low'
+}
+
+// Social stats types
+export interface SocialStats {
+  trends: {
+    followers: TimelineData[]
+    following: TimelineData[]
+  }
+}
+
+export interface ActivityTrends {
+  dailyAverage: number
+  weeklyGrowth: number
+  mostActiveDay: string
+  mostActiveTime: string
+}
+
+export interface SpiritAnimalMetrics {
+  activityLevel: number
+  consistency: number
+  collaboration: number
+  codeQuality: number
+  communityEngagement: number
+}
+
+export interface CodeQualityMetrics {
+  averageCommitSize: number
+  prReviewParticipation: number
+  issueResolutionRate: number
+  codeReviewThoroughness: number
+}
+
+export interface EngagementMetrics {
+  issueDiscussionCount: number
+  prReviewCount: number
+  averageCommentsPerIssue: number
+  averageCommentsPerPR: number
 }
