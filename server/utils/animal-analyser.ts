@@ -1,12 +1,12 @@
 import type { UserActivity, AnimalCharacteristic, AnimalProfile, DailyActivity } from '~~/types/github'
 
 /**
- * Predefined spirit animal profiles with their characteristics and matching conditions.
- * Each animal represents different GitHub activity patterns and work styles:
- * - Wolf: Team player, predominantly active at night
- * - Cat: Independent contributor, active during twilight hours
- * - Beaver: Consistent builder, active during daytime
- * - Owl: Code reviewer, active during night hours
+ * Spirit Animal Profiles
+ * Each animal represents distinct GitHub work patterns:
+ * Wolf: Team-oriented, night owls, collaborative
+ * Cat: Independent, selective engagement, twilight hours
+ * Beaver: Consistent builders, daytime workers
+ * Owl: Code reviewers, night-time analysts
  */
 const ANIMAL_PROFILES: AnimalProfile[] = [
   {
@@ -111,16 +111,9 @@ function calculateAnimalMatch(profile: AnimalProfile, activity: UserActivity, pa
 }
 
 /**
- * Main analysis function that determines a user's GitHub spirit animals
- * Process:
- * 1. Analyzes activity patterns (time of day preferences)
- * 2. Evaluates contribution consistency
- * 3. Matches behavior against animal profiles
- * 4. Returns sorted array of matching animals with percentages
- *
- * @param activity - User's activity metrics (commits, PRs, etc.)
- * @param activityHeatmap - Temporal distribution of user's activity
- * @returns Array of matching animal characteristics, sorted by match percentage
+ * Core spirit animal analysis function
+ * Evaluates GitHub activity patterns and matches them to animal characteristics
+ * Returns sorted array of matching animals with confidence percentages
  */
 export function analyzeGitHubSpirit(
   activity: UserActivity,
@@ -145,3 +138,6 @@ export function analyzeGitHubSpirit(
       percentage: Math.round(match.percentage * 100) / 100,
     }))
 }
+
+// Make these functions available for import
+export { determineActivityPattern, calculateConsistency }
