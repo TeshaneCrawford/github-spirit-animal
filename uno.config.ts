@@ -28,7 +28,7 @@ const wolfTheme = {
 }
 console.log('Wolf theme tokens:', wolfTheme)
 
-// Define theme colors for each spirit animal - restructure to separate light/dark
+// Define theme colors for each spirit animal
 const animalThemes = {
   wolf: {
     light: radixToCustomProperties(colors.red),
