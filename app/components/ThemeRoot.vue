@@ -44,6 +44,9 @@ watchEffect(() => {
   --theme-primary: var(--red9);
   --theme-secondary: var(--red11);
   --theme-muted: var(--red8);
+  --theme-badge: var(--red4);
+  --theme-hover: var(--red10);
+  --theme-border: var(--red7);
 }
 
 .theme-wolf.dark {
@@ -55,6 +58,10 @@ watchEffect(() => {
 .theme-cat {
   --theme-primary: var(--orange9);
   --theme-secondary: var(--orange11);
+  --theme-muted: var(--orange8);
+  --theme-badge: var(--orange4);
+  --theme-hover: var(--orange10);
+  --theme-border: var(--orange7);
 }
 
 .theme-cat.dark {
@@ -65,6 +72,10 @@ watchEffect(() => {
 .theme-beaver {
   --theme-primary: var(--brown9);
   --theme-secondary: var(--brown11);
+  --theme-muted: var(--brown8);
+  --theme-badge: var(--brown4);
+  --theme-hover: var(--brown10);
+  --theme-border: var(--brown7);
 }
 
 .theme-beaver.dark {
@@ -75,6 +86,10 @@ watchEffect(() => {
 .theme-owl {
   --theme-primary: var(--purple9);
   --theme-secondary: var(--purple11);
+  --theme-muted: var(--purple8);
+  --theme-badge: var(--purple4);
+  --theme-hover: var(--purple10);
+  --theme-border: var(--purple7);
 }
 
 .theme-owl.dark {
