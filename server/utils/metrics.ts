@@ -1,5 +1,6 @@
 import type { CodeQualityMetrics, EngagementMetrics, GitHubEvent } from '~~/types/github'
 
+// Cache quality metrics for 30 minutes to reduce API load
 export const calculateCodeQuality = defineCachedFunction(
   async (events: GitHubEvent[]): Promise<CodeQualityMetrics> => {
     const commits = events.filter(e => e.type === 'PushEvent')
@@ -19,6 +20,7 @@ export const calculateCodeQuality = defineCachedFunction(
   },
 )
 
+// Cache engagement metrics for 30 minutes
 export const calculateEngagement = defineCachedFunction(
   async (events: GitHubEvent[]): Promise<EngagementMetrics> => {
     return {
@@ -36,8 +38,8 @@ export const calculateEngagement = defineCachedFunction(
 )
 
 /**
- * Calculates the average size of commits based on commit message length
- * Higher values indicate more detailed commit messages
+ * Evaluates commit quality using message length as a proxy
+ * Higher scores indicate more descriptive commits
  */
 function calculateAverageCommitSize(commits: GitHubEvent[]): number {
   const sizes = commits
@@ -47,8 +49,8 @@ function calculateAverageCommitSize(commits: GitHubEvent[]): number {
 }
 
 /**
- * Measures user's involvement in pull requests
- * Includes both opened PRs and review activities
+ * Quantifies user's code review engagement
+ * Includes both PR submissions and reviews
  */
 function calculatePRParticipation(prs: GitHubEvent[]): number {
   return prs.filter(pr => pr.payload.action === 'opened' || pr.payload.action === 'reviewed').length

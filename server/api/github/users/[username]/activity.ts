@@ -33,9 +33,9 @@ function calculateActivityMetrics(activities: GitHubEvent[], days: number): User
  */
 function generateActivityHeatmap(activities: GitHubEvent[]): DailyActivity[] {
   return activities.reduce((acc: DailyActivity[], event) => {
-    if (!event.created_at) return acc
+    const date = event.created_at ? new Date(event.created_at) : null
+    if (!date) return acc
 
-    const date = new Date(event.created_at)
     const day = date.getDay()
     const hour = date.getHours()
     const existingEntry = acc.find(a => a.day === day && a.hour === hour)
@@ -65,11 +65,14 @@ function calculateActivityTrends(activities: GitHubEvent[]): ActivityTrends {
     activityByHour[date.getHours()]++
   })
 
+  const maxActivityDayIndex = activityByDay.indexOf(Math.max(...activityByDay))
+  const maxActivityHourIndex = activityByHour.indexOf(Math.max(...activityByHour))
+
   return {
     dailyAverage: activities.length / 7,
     weeklyGrowth: calculateWeeklyGrowthRate(activities),
-    mostActiveDay: DAYS[activityByDay.indexOf(Math.max(...activityByDay))],
-    mostActiveTime: `${activityByHour.indexOf(Math.max(...activityByHour))}:00`,
+    mostActiveDay: DAYS[maxActivityDayIndex] || 'Sunday', // Ensure string type with fallback
+    mostActiveTime: `${maxActivityHourIndex}:00`,
   }
 }
 
@@ -102,12 +105,9 @@ interface EnhancedActivityStats extends ActivityStats {
 }
 
 /**
- * Activity Stats Endpoint
- * Provides comprehensive activity analysis including:
- * - Daily/weekly/monthly metrics
- * - Activity heatmap
- * - Code quality metrics
- * - Engagement statistics
+ * Activity Stats API
+ * Returns user's contribution patterns, code quality metrics,
+ * and engagement statistics with 10m cache
  */
 export default defineEventHandler(async (event): Promise<EnhancedActivityStats> => {
   const username = getRouterParam(event, 'username')

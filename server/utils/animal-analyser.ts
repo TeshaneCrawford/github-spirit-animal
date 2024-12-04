@@ -1,12 +1,11 @@
 import type { UserActivity, AnimalCharacteristic, AnimalProfile, DailyActivity } from '~~/types/github'
 
 /**
- * Spirit Animal Profiles
- * Each animal represents distinct GitHub work patterns:
- * Wolf: Team-oriented, night owls, collaborative
- * Cat: Independent, selective engagement, twilight hours
- * Beaver: Consistent builders, daytime workers
- * Owl: Code reviewers, night-time analysts
+ * Spirit Animals represent distinct work styles:
+ * - Wolf: Night-active team collaborator
+ * - Cat: Independent twilight worker
+ * - Beaver: Consistent daytime builder
+ * - Owl: Nocturnal code reviewer
  */
 const ANIMAL_PROFILES: AnimalProfile[] = [
   {
@@ -56,10 +55,8 @@ const ANIMAL_PROFILES: AnimalProfile[] = [
 ]
 
 /**
- * Analyzes user's activity pattern based on their commit timing
- * - Diurnal: Predominantly active during daylight (6:00-18:00)
- * - Nocturnal: Predominantly active during night (18:00-6:00)
- * - Crepuscular: Active during twilight hours or mixed patterns
+ * Maps activity timing to behavioral patterns
+ * Diurnal (6-18h), Nocturnal (18-6h), or Mixed
  */
 function determineActivityPattern(activityHeatmap: DailyActivity[]): 'diurnal' | 'nocturnal' | 'crepuscular' {
   if (!activityHeatmap || activityHeatmap.length === 0) {

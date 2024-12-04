@@ -175,6 +175,10 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
     }
 
     const firstRepo = repositories[0]
+    if (!firstRepo) {
+      throw new Error('Repository data is invalid')
+    }
+
     const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
     console.log('Activity fetched:', activity?.length || 0)
 
