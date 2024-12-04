@@ -1,6 +1,5 @@
 import type { H3Event } from 'h3'
 import { Octokit } from 'octokit'
-import { checkRateLimit } from './rate-limit'
 import type { UserProfileData, GitHubError } from '~~/types/github'
 
 // Singleton instance of Octokit client
@@ -157,16 +156,13 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
  * @throws Error if repositories, activity, or commits are not found
  * @cache 10 minutes with stale-while-revalidate
  */
-export const fetchUserStats = defineCachedFunction(async (event: H3Event, username: string) => {
+export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
   try {
-    // Check rate limit before making requests
-    await checkRateLimit(event)
-
     console.log('Fetching stats for user:', username)
-    const userData = await fetchUserProfile(event, username)
+    const userData = await fetchUserProfile(_event, username)
     console.log('User profile fetched:', !!userData)
 
-    const repositories = await fetchUserRepositories(event, username, userData.login)
+    const repositories = await fetchUserRepositories(_event, username, userData.login)
     console.log('Repositories fetched:', repositories?.length || 0)
 
     if (!repositories?.length) {
@@ -180,30 +176,22 @@ export const fetchUserStats = defineCachedFunction(async (event: H3Event, userna
 
     const firstRepo = repositories[0]
     if (!firstRepo) {
-      throw createError({
-        statusCode: 404,
-        message: 'No repositories found',
-      })
+      throw new Error('Repository data is invalid')
     }
 
-    const activity = await fetchUserActivity(event, username, userData.login, firstRepo.name)
+    const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
     console.log('Activity fetched:', activity?.length || 0)
 
     return {
       userData,
       repositories,
       activity: activity || [],
-      commit: null,
+      commit: null, // Make commit optional
     }
   }
   catch (error) {
     console.error('Error in fetchUserStats:', error)
-    // Enhance error handling
-    const githubError = error as GitHubError
-    throw createError({
-      statusCode: githubError.response?.status || githubError.status || 500,
-      message: githubError.response?.data?.message || githubError.message || 'Failed to fetch user stats',
-    })
+    throw error
   }
 }, {
   maxAge: 60 * 10,

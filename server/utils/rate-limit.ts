@@ -17,14 +17,10 @@ export async function checkRateLimit(_event: H3Event): Promise<RateLimitInfo> {
   const octokit = useOctokit()
   const { data: rateLimit } = await octokit.request('GET /rate_limit')
 
-  // More conservative limit checking
-  if (rateLimit.resources.core.remaining < 20) {
-    const resetDate = new Date(rateLimit.resources.core.reset * 1000)
-    const minutesUntilReset = Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60))
-
+  if (rateLimit.resources.core.remaining < 10) {
     throw createError({
       statusCode: 429,
-      message: `GitHub API rate limit near exceeded. ${rateLimit.resources.core.remaining} calls remaining. Resets in ${minutesUntilReset} minutes at ${resetDate.toISOString()}`,
+      message: `Rate limit nearly exceeded. Resets at ${new Date(rateLimit.resources.core.reset * 1000).toISOString()}`,
     })
   }
 
