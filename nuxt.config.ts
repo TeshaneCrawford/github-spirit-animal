@@ -39,7 +39,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     githubToken: process.env.NUXT_GITHUB_TOKEN,
     public: {
-      // Can be overridden by NUXT_PUBLIC_HELLO_TEXT environment variable
+      // Can be overridden environment variable
       helloText: 'Your spirit animal is a 🦄',
     },
   },
