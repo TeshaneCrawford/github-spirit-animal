@@ -1,71 +1,47 @@
 <script setup lang="ts">
-import { useThemeStore } from '~/stores/theme'
+const username = ref('')
+const router = useRouter()
 
-const themeStore = useThemeStore()
-const animals = ['wolf', 'cat', 'beaver', 'owl'] as const
-
-function setAnimal(animal: typeof animals[number]) {
-  themeStore.setThemeFromAnimals([{ animal, percentage: 100 }])
+function handleSearch(e: Event) {
+  e.preventDefault()
+  if (username.value.trim()) {
+    router.push(`/${username.value.trim()}`)
+  }
 }
 </script>
 
 <template>
-  <main class="p-8">
-    <div class="mx-auto max-w-md border border-[--gray6] rounded-lg p-6 space-y-6">
-      <h1 class="text-responsive-3xl font-bold" style="color: var(--theme-secondary)">
-        Theme Tester
-      </h1>
-
-      <!-- Typography demo -->
-      <div class="space-y-4">
-        <p class="text-responsive-base">
-          Large text example
-        </p>
-        <p class="text-responsive-sm">
-          Normal text example
-        </p>
-        <p class="text-responsive-xs">
-          Smaller text example
+  <main class="min-h-screen flex items-center justify-center p-8">
+    <div class="max-w-md w-full">
+      <!-- Header -->
+      <div class="mb-8 text-center">
+        <h1 class="mb-2 text-responsive-4xl font-bold" style="color: var(--theme-primary)">
+          GitHub Spirit Animal
+        </h1>
+        <p class="text-responsive-base text-[--gray11]">
+          Discover which animal matches your GitHub personality
         </p>
       </div>
 
-      <!-- Animal selector buttons -->
-      <div class="flex flex-wrap gap-2">
+      <!-- Search Form -->
+      <form class="space-y-4" @submit="handleSearch">
+        <div class="relative">
+          <input
+            v-model="username"
+            type="text"
+            placeholder="Enter GitHub username"
+            class="w-full border border-[--gray6] rounded-lg bg-[--gray3] px-4 py-3 outline-none transition-colors focus:border-[--gray8]"
+          >
+        </div>
         <button
-          v-for="animal in animals"
-          :key="animal"
-          class="rounded-full px-4 py-2 transition-colors duration-300"
-          :class="[
-            themeStore.currentTheme === animal ? 'text-white' : 'hover:bg-[--gray5]',
-          ]"
-          :style="themeStore.currentTheme === animal ? { backgroundColor: 'var(--theme-primary)' } : {}"
-          @click="setAnimal(animal)"
-        >
-          {{ animal }}
-        </button>
-      </div>
-
-      <!-- Theme preview elements -->
-      <div class="space-y-4">
-        <div
-          class="h-24 flex items-center justify-center rounded-md text-white"
+          type="submit"
+          class="w-full rounded-lg px-4 py-3 text-white transition-colors duration-300"
           :style="{ backgroundColor: 'var(--theme-primary)' }"
+          :disabled="!username.trim()"
         >
-          Primary Color Block
-        </div>
-        <div
-          class="h-24 flex items-center justify-center rounded-md text-white"
-          :style="{ backgroundColor: 'var(--theme-secondary)' }"
-        >
-          Secondary Color Block
-        </div>
-      </div>
-
-      <!-- Current theme info -->
-      <div class="text-sm">
-        <p>Current Theme: <span style="color: var(--theme-primary)">{{ themeStore.currentTheme }}</span></p>
-        <p>Color Mode: <span style="color: var(--theme-secondary)">{{ themeStore.colorMode.value }}</span></p>
-      </div>
+          Analyze Profile
+        </button>
+      </form>
     </div>
   </main>
 </template>

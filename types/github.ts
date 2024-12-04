@@ -179,6 +179,7 @@ export interface ActivityStats {
   heatmap: DailyActivity[]
   codeQuality: CodeQualityMetrics
   engagement: EngagementMetrics
+  trends: ActivityTrends // Add this line
 }
 
 /** Results of spirit animal analysis including behavioral patterns */
@@ -189,13 +190,14 @@ export interface SpiritAnimalProfile {
   consistency: 'high' | 'medium' | 'low'
 }
 
-// Social stats types
-export interface SocialStats {
-  trends: {
-    followers: TimelineData[]
-    following: TimelineData[]
-  }
-}
+// Remove these interfaces
+// export interface SocialStats {
+//   trends: SocialTrends
+// }
+// export interface TimelineData {
+//   date: string
+//   count: number
+// }
 
 export interface ActivityTrends {
   dailyAverage: number

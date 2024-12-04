@@ -28,6 +28,16 @@ export const useThemeStore = defineStore('theme', () => {
       currentTheme.value = dominantAnimal.animal.toLowerCase()
       animalProfiles.value = animals as AnimalCharacteristic[]
     }
+    else {
+      // Default theme when no animals are matched
+      currentTheme.value = 'wolf'
+      animalProfiles.value = []
+    }
+
+    // Set dark mode automatically for nocturnal animals
+    if (NOCTURNAL_ANIMALS.includes(currentTheme.value)) {
+      colorMode.preference = 'dark'
+    }
   }
 
   // Toggles between light and dark mode while maintaining the current animal theme

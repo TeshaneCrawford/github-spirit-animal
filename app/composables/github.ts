@@ -1,7 +1,6 @@
 import type {
   UserProfileData,
   SpiritAnimalProfile,
-  TimelineData,
   ActivityStats,
 } from '~~/types/github'
 
@@ -44,17 +43,6 @@ export function useGitHubSpirit(username: string) {
 }
 
 /**
- * Composable for fetching social network trends
- * Tracks follower and following count changes
- */
-export function useGitHubSocial(username: string) {
-  return useAsyncData<{ followers: TimelineData[], following: TimelineData[] }>(
-    `github-social-${username}`,
-    () => $fetch<{ followers: TimelineData[], following: TimelineData[] }>(`/api/github/users/${username}/social`),
-  )
-}
-
-/**
  * Composable for fetching detailed activity statistics
  * Includes metrics, heatmap, and engagement data
  */
@@ -79,23 +67,20 @@ export function useGitHubActivity(username: string) {
 
 /**
  * Combined composable that fetches all GitHub data
- * Useful for initial page load and data refresh
  */
 export function useGitHubData(username: string) {
   const profile = useGitHubProfile(username)
   const spirit = useGitHubSpirit(username)
-  const social = useGitHubSocial(username)
   const activity = useGitHubActivity(username)
 
   const isLoading = computed(() =>
     profile.status.value === 'pending'
     || spirit.status.value === 'pending'
-    || social.status.value === 'pending'
     || activity.status.value === 'pending',
   )
 
   const error = computed(() => {
-    const failedRequest = [profile, spirit, social, activity].find(data =>
+    const failedRequest = [profile, spirit, activity].find(data =>
       data.status.value === 'error',
     )
     return failedRequest?.error.value
@@ -105,7 +90,6 @@ export function useGitHubData(username: string) {
     await Promise.all([
       profile.refresh(),
       spirit.refresh(),
-      social.refresh(),
       activity.refresh(),
     ])
   }
@@ -113,7 +97,6 @@ export function useGitHubData(username: string) {
   return {
     profile,
     spirit,
-    social,
     activity,
     isLoading,
     error,
