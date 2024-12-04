@@ -37,7 +37,10 @@ export default defineNuxtConfig({
 
   // Env variables - https://nuxt.com/docs/getting-started/configuration#environment-variables-and-private-tokens
   runtimeConfig: {
-    githubToken: process.env.NUXT_GITHUB_TOKEN,
+    githubToken: '',
+    private: {
+      githubToken: process.env.NUXT_GITHUB_TOKEN,
+    },
     public: {
       // Can be overridden environment variable
       helloText: 'Your spirit animal is a 🦄',
