@@ -118,91 +118,57 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
     })
   }
 
+  // Add rate limit check
+  await checkRateLimit(event)
+
   try {
-    // Check rate limit first
-    const rateLimit = await checkRateLimit(event)
-    console.log(`Rate limit status: ${rateLimit.remaining}/${rateLimit.limit} remaining`)
+    const [stats, activityMetrics] = await Promise.all([
+      fetchUserStats(event, username),
+      fetchActivityMetrics(event, username),
+    ])
 
-    // Retry logic for fetching data
-    const maxRetries = 3
-    let attempt = 0
-    let lastError
-
-    while (attempt < maxRetries) {
-      try {
-        const [stats, activityMetrics] = await Promise.all([
-          fetchUserStats(event, username),
-          fetchActivityMetrics(event, username),
-        ])
-
-        if (!stats?.activity || !activityMetrics?.commitPatterns) {
-          throw createError({
-            statusCode: 404,
-            message: `Incomplete activity data for user: ${username}`,
-          })
-        }
-
-        const allActivities = [
-          ...activityMetrics.commitPatterns,
-          ...activityMetrics.prActivity,
-          ...activityMetrics.issueActivity,
-        ]
-
-        // Add logging for debugging
-        console.log(`Successfully fetched data for ${username}:`, {
-          activitiesCount: allActivities.length,
-          hasStats: !!stats,
-          hasMetrics: !!activityMetrics,
-        })
-
-        const baseStats = {
-          current: {
-            daily: calculateActivityMetrics(allActivities, 1),
-            weekly: calculateActivityMetrics(allActivities, 7),
-            monthly: calculateActivityMetrics(allActivities, 30),
-          },
-          heatmap: generateActivityHeatmap(allActivities),
-        }
-
-        const trends = calculateActivityTrends(allActivities)
-        const [codeQuality, engagement] = await Promise.all([
-          calculateCodeQuality(stats.activity),
-          calculateEngagement(stats.activity),
-        ])
-
-        return {
-          ...baseStats,
-          trends,
-          codeQuality,
-          engagement,
-        }
-      }
-      catch (error) {
-        lastError = error
-        attempt++
-        if (attempt < maxRetries) {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)))
-          continue
-        }
-        break
-      }
+    if (!stats || !activityMetrics || !activityMetrics.commitPatterns) {
+      throw createError({
+        statusCode: 404,
+        message: 'Incomplete activity data found for this user',
+      })
     }
 
-    // If we got here, all retries failed
-    throw lastError
+    const allActivities = [
+      ...activityMetrics.commitPatterns,
+      ...activityMetrics.prActivity,
+      ...activityMetrics.issueActivity,
+    ]
+
+    const baseStats = {
+      current: {
+        daily: calculateActivityMetrics(allActivities, 1),
+        weekly: calculateActivityMetrics(allActivities, 7),
+        monthly: calculateActivityMetrics(allActivities, 30),
+      },
+      heatmap: generateActivityHeatmap(allActivities),
+    }
+
+    const trends = calculateActivityTrends(allActivities)
+
+    // Calculate enhanced metrics
+    const [codeQuality, engagement] = await Promise.all([
+      calculateCodeQuality(stats.activity),
+      calculateEngagement(stats.activity),
+    ])
+
+    return {
+      ...baseStats,
+      trends,
+      codeQuality,
+      engagement,
+    }
   }
   catch (error: unknown) {
     const githubError = error as GitHubError
-    console.error('GitHub API Error:', {
-      status: githubError.status || githubError.response?.status,
-      message: githubError.message,
-      username,
-    })
-
     throw createError({
       statusCode: githubError.status || githubError.response?.status || 500,
-      message: githubError.message || 'Failed to fetch activity data. Please try again later.',
+      message: githubError.message || 'Failed to fetch activity data',
     })
   }
 })

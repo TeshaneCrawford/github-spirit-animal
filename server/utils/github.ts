@@ -12,22 +12,9 @@ const GITHUB_API_BASE = 'https://api.github.com'
  * Initializes with GitHub token if not already created
  */
 export function useOctokit() {
-  const config = useRuntimeConfig()
-  const token = config.githubToken || process.env.NUXT_GITHUB_TOKEN
-
-  if (!token) {
-    throw createError({
-      statusCode: 500,
-      message: 'GitHub token is not configured',
-    })
-  }
-
   if (!_octokit) {
     _octokit = new Octokit({
-      auth: token,
-      request: {
-        timeout: 10000, // 10 second timeout
-      },
+      auth: process.env.NUXT_GITHUB_TOKEN,
     })
   }
   return _octokit
@@ -170,23 +157,7 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
  * @cache 10 minutes with stale-while-revalidate
  */
 export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
-  if (!username) {
-    throw createError({
-      statusCode: 400,
-      message: 'Username is required',
-    })
-  }
-
   try {
-    // Validate token before making requests
-    const octokit = useOctokit()
-    if (!octokit) {
-      throw createError({
-        statusCode: 500,
-        message: 'GitHub client initialization failed',
-      })
-    }
-
     console.log('Fetching stats for user:', username)
     const userData = await fetchUserProfile(_event, username)
     console.log('User profile fetched:', !!userData)
@@ -218,15 +189,12 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
       commit: null, // Make commit optional
     }
   }
-  catch (error: unknown) {
+  catch (error) {
     console.error('Error in fetchUserStats:', error)
-    throw createError({
-      statusCode: (error as { response?: { status: number } })?.response?.status || 500,
-      message: (error as Error)?.message || 'Failed to fetch user stats',
-    })
+    throw error
   }
 }, {
-  maxAge: 60 * 5, // Reduce cache time to 5 minutes
+  maxAge: 60 * 10,
   swr: true,
   group: 'github',
   name: 'fetchUserStats',
