@@ -1,4 +1,4 @@
-import type { ActivityStats, UserActivity, DailyActivity, GitHubEvent, GitHubError, ActivityTrends } from '~~/types/github'
+import type { ActivityStats, UserActivity, DailyActivity, GitHubEvent, GitHubError, ActivityTrends, CodeQualityMetrics, EngagementMetrics } from '~~/types/github'
 import { fetchUserStats, fetchActivityMetrics } from '~~/server/utils/github'
 import { checkRateLimit } from '~~/server/utils/rate-limit'
 import { calculateCodeQuality, calculateEngagement } from '~~/server/utils/metrics'
@@ -118,20 +118,44 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
     })
   }
 
-  // Add rate limit check
-  await checkRateLimit(event)
-
   try {
+    // Add rate limit check with better error handling
+    try {
+      await checkRateLimit(event)
+    }
+    catch (rateLimitError) {
+      console.error('Rate limit error:', rateLimitError)
+      throw createError({
+        statusCode: 429,
+        message: 'GitHub API rate limit exceeded. Please try again later.',
+      })
+    }
+
     const [stats, activityMetrics] = await Promise.all([
-      fetchUserStats(event, username),
-      fetchActivityMetrics(event, username),
+      fetchUserStats(event, username).catch((error) => {
+        console.error('Error fetching user stats:', error)
+        throw error
+      }),
+      fetchActivityMetrics(event, username).catch((error) => {
+        console.error('Error fetching activity metrics:', error)
+        throw error
+      }),
     ])
 
-    if (!stats || !activityMetrics || !activityMetrics.commitPatterns) {
-      throw createError({
-        statusCode: 404,
-        message: 'Incomplete activity data found for this user',
-      })
+    if (!stats?.activity) {
+      console.warn('No activity data found for user:', username)
+      // Return empty stats instead of throwing error
+      return {
+        current: {
+          daily: getEmptyActivityMetrics(),
+          weekly: getEmptyActivityMetrics(),
+          monthly: getEmptyActivityMetrics(),
+        },
+        heatmap: [],
+        codeQuality: getEmptyCodeQuality(),
+        engagement: getEmptyEngagement(),
+        trends: getEmptyTrends(),
+      }
     }
 
     const allActivities = [
@@ -165,10 +189,58 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
     }
   }
   catch (error: unknown) {
+    console.error('Activity endpoint error:', error)
     const githubError = error as GitHubError
+
+    // Determine appropriate status code
+    const statusCode = githubError.status
+      || githubError.response?.status
+      || (githubError.message?.includes('rate limit') ? 429 : 500)
+
     throw createError({
-      statusCode: githubError.status || githubError.response?.status || 500,
+      statusCode,
       message: githubError.message || 'Failed to fetch activity data',
+      cause: error, // Add cause for better error tracking
     })
   }
 })
+
+// Add helper functions for empty states
+function getEmptyActivityMetrics(): UserActivity {
+  return {
+    commits: 0,
+    pullRequests: 0,
+    issues: 0,
+    comments: 0,
+    repositories: 0,
+    contributions: 0,
+    timestamp: new Date().toISOString(),
+  }
+}
+
+function getEmptyCodeQuality(): CodeQualityMetrics {
+  return {
+    averageCommitSize: 0,
+    prReviewParticipation: 0,
+    issueResolutionRate: 0,
+    codeReviewThoroughness: 0,
+  }
+}
+
+function getEmptyEngagement(): EngagementMetrics {
+  return {
+    issueDiscussionCount: 0,
+    prReviewCount: 0,
+    averageCommentsPerIssue: 0,
+    averageCommentsPerPR: 0,
+  }
+}
+
+function getEmptyTrends(): ActivityTrends {
+  return {
+    dailyAverage: 0,
+    weeklyGrowth: 0,
+    mostActiveDay: 'Sunday',
+    mostActiveTime: '0:00',
+  }
+}

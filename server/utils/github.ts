@@ -159,12 +159,27 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
 export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
   try {
     console.log('Fetching stats for user:', username)
+
     const userData = await fetchUserProfile(_event, username)
+      .catch((error) => {
+        console.error('Error fetching user profile:', error)
+        throw createError({
+          statusCode: error.status || 500,
+          message: `Failed to fetch user profile: ${error.message}`,
+        })
+      })
+
     console.log('User profile fetched:', !!userData)
 
     const repositories = await fetchUserRepositories(_event, username, userData.login)
+      .catch((error) => {
+        console.error('Error fetching repositories:', error)
+        return [] // Return empty array instead of throwing
+      })
+
     console.log('Repositories fetched:', repositories?.length || 0)
 
+    // Return minimal data if no repositories found
     if (!repositories?.length) {
       return {
         userData,
@@ -175,23 +190,28 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
     }
 
     const firstRepo = repositories[0]
-    if (!firstRepo) {
-      throw new Error('Repository data is invalid')
-    }
-
     const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
+      .catch((error) => {
+        console.error('Error fetching activity:', error)
+        return [] // Return empty array instead of throwing
+      })
+
     console.log('Activity fetched:', activity?.length || 0)
 
     return {
       userData,
       repositories,
       activity: activity || [],
-      commit: null, // Make commit optional
+      commit: null,
     }
   }
   catch (error) {
     console.error('Error in fetchUserStats:', error)
-    throw error
+    throw createError({
+      statusCode: (error as GitHubError).status || 500,
+      message: `Failed to fetch user stats: ${(error as Error).message}`,
+      cause: error,
+    })
   }
 }, {
   maxAge: 60 * 10,
