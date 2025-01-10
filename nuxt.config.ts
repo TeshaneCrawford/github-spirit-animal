@@ -37,12 +37,7 @@ export default defineNuxtConfig({
 
   // Env variables - https://nuxt.com/docs/getting-started/configuration#environment-variables-and-private-tokens
   runtimeConfig: {
-    // Private keys that are exposed to the server only
-    githubToken: process.env.GITHUB_TOKEN || '', // for server-side
-    private: {
-      githubToken: process.env.GITHUB_TOKEN, // Private backup if needed
-    },
-    // Public keys that are exposed to the client
+    githubToken: process.env.GITHUB_TOKEN, // server-side only
     public: {
       helloText: 'Your spirit animal is a 🦄',
     },
