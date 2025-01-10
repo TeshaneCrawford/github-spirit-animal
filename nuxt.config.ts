@@ -37,7 +37,7 @@ export default defineNuxtConfig({
 
   // Env variables - https://nuxt.com/docs/getting-started/configuration#environment-variables-and-private-tokens
   runtimeConfig: {
-    githubToken: '',
+    githubToken: process.env.NUXT_GITHUB_TOKEN || '', // Add fallback empty string
     private: {
       githubToken: process.env.NUXT_GITHUB_TOKEN,
     },
