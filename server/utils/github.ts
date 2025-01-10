@@ -190,6 +190,17 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
     }
 
     const firstRepo = repositories[0]
+    // Add null check for firstRepo
+    if (!firstRepo?.name) {
+      console.warn('First repository is invalid')
+      return {
+        userData,
+        repositories,
+        activity: [],
+        commit: null,
+      }
+    }
+
     const activity = await fetchUserActivity(_event, username, userData.login, firstRepo.name)
       .catch((error) => {
         console.error('Error fetching activity:', error)
