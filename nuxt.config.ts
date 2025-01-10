@@ -1,4 +1,7 @@
+/** Nuxt application configuration */
+
 export default defineNuxtConfig({
+  /** Core functionality modules */
   modules: [
     '@nuxthub/core',
     '@nuxt/eslint',
@@ -12,34 +15,33 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
   ],
 
+  /** Build and runtime settings */
   ssr: true,
-  // https://devtools.nuxt.com
   devtools: { enabled: true },
 
+  // Application styling
   css: [
     '@unocss/reset/tailwind.css',
     '@/assets/css/main.css',
   ],
 
+  // Site metadata
   site: {
     url: 'https://example.com',
     name: 'GitHub Spirit Animal',
   },
 
+  // Theme configuration
   colorMode: {
     classSuffix: '',
     fallback: 'light',
-    // Add storage key to match app.config.ts
     storageKey: 'github-spirit-color-mode',
-    // Enable data-theme attribute
     dataValue: 'theme',
   },
 
-  // Env variables - https://nuxt.com/docs/getting-started/configuration#environment-variables-and-private-tokens
+  /** Environment and authentication */
   runtimeConfig: {
-    // Private keys (server-side only)
-    githubToken: process.env.GITHUB_TOKEN,
-    // Public keys that are exposed to the client
+    githubToken: process.env.NUXT_GITHUB_TOKEN,
     public: {
       helloText: 'Your spirit animal is a 🦄',
     },

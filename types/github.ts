@@ -1,4 +1,6 @@
-/** Represents a GitHub user's basic profile information */
+/** Core interfaces for GitHub data processing and analysis */
+
+/** Base user profile from GitHub API */
 export interface GitHubUser {
   login: string
   name: string | null
@@ -13,7 +15,7 @@ export interface GitHubUser {
   created_at: string
 }
 
-/** Tracks user activity metrics aggregated over a specific time period */
+/** Activity tracking with temporal metrics */
 export interface UserActivity {
   commits: number
   pullRequests: number
@@ -24,19 +26,14 @@ export interface UserActivity {
   timestamp: string
 }
 
-/**
- * Maps user activity to specific time slots in a week
- * day: 0 (Sunday) through 6 (Saturday)
- * hour: 0-23 representing hour of day
- * intensity: Activity level from 0 (none) to 4 (very high)
- */
+/** Activity intensity mapping for temporal analysis */
 export interface DailyActivity {
   day: number // 0-6 (Sunday-Saturday)
   hour: number // 0-23
   intensity: number // 0-4 (level of activity)
 }
 
-/** Defines the spirit animal match and associated characteristics */
+/** Spirit animal matching results */
 export interface AnimalCharacteristic {
   animal: string
   percentage: number

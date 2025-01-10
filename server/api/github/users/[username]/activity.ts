@@ -1,13 +1,10 @@
+/** Activity analysis endpoint - Processes user's GitHub contribution patterns */
+
 import type { ActivityStats, UserActivity, DailyActivity, GitHubEvent, GitHubError, ActivityTrends, CodeQualityMetrics, EngagementMetrics } from '~~/types/github'
 import { fetchUserStats, fetchActivityMetrics } from '~~/server/utils/github'
-import { checkRateLimit } from '~~/server/utils/rate-limit'
 import { calculateCodeQuality, calculateEngagement } from '~~/server/utils/metrics'
 
-/**
- * Calculates contribution metrics for a specific time window
- * @param activities Array of GitHub events to analyze
- * @param days Number of days to include in analysis
- */
+/** Temporal activity metrics calculation */
 function calculateActivityMetrics(activities: GitHubEvent[], days: number): UserActivity {
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - days)
@@ -119,19 +116,6 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
   }
 
   try {
-    // Add rate limit check with better error handling
-    try {
-      await checkRateLimit(event)
-    }
-    catch (error) {
-      console.error('Rate limit error:', error)
-      const rateLimitError = error as GitHubError
-      throw createError({
-        statusCode: rateLimitError.status || 429,
-        message: rateLimitError.message || 'GitHub API rate limit exceeded. Please try again later.',
-      })
-    }
-
     const [stats, activityMetrics] = await Promise.all([
       fetchUserStats(event, username).catch((error) => {
         console.error('Error fetching user stats:', error)
@@ -196,7 +180,7 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
     // Determine appropriate status code
     const statusCode = githubError.status
       || githubError.response?.status
-      || (githubError.message?.includes('rate limit') ? 429 : 500)
+      || 500
 
     throw createError({
       statusCode,

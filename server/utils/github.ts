@@ -1,16 +1,15 @@
+/** GitHub API integration layer with caching and error handling */
+
 import type { H3Event } from 'h3'
 import { Octokit } from 'octokit'
 import type { UserProfileData, GitHubError } from '~~/types/github'
 
-// Singleton instance of Octokit client
+// GitHub API client management
 let _octokit: Octokit
 
 const GITHUB_API_BASE = 'https://api.github.com'
 
-/**
- * Returns a singleton instance of Octokit client
- * Initializes with GitHub token if not already created
- */
+/** API client initialization and auth */
 export function useOctokit() {
   if (!_octokit) {
     const config = useRuntimeConfig()
@@ -28,52 +27,54 @@ export function useOctokit() {
 }
 
 /**
- * Fetches and caches a GitHub user's profile information
- * @param username - GitHub username
- * @returns User profile data
- * @cache 10 minutes with stale-while-revalidate
+ * Fetches a GitHub user's profile with proper error handling
+ * @param username - Target GitHub username
+ * @returns Normalized user profile data
+ * @throws {Error} If authentication fails or user not found
  */
 export async function fetchUserProfile(event: H3Event, username: string): Promise<UserProfileData> {
   const config = useRuntimeConfig()
+  const token = config.githubToken
+
+  if (!token) {
+    console.error('GitHub token is missing')
+    throw createError({
+      statusCode: 401,
+      message: 'GitHub authentication not configured',
+    })
+  }
 
   try {
-    const userData = await $fetch<UserProfileData>(`${GITHUB_API_BASE}/users/${username}`, {
+    console.log('Fetching profile for:', username)
+    const response = await $fetch<UserProfileData>(`${GITHUB_API_BASE}/users/${username}`, {
       headers: {
         Accept: 'application/vnd.github.v3+json',
-        Authorization: `Bearer ${config.githubToken}`,
+        Authorization: `token ${token}`, // Use 'token' prefix instead of 'Bearer'
       },
     })
 
-    if (!userData || !userData.login) {
-      throw new Error('Invalid user data received')
+    if (!response) {
+      console.error('No response from GitHub API')
+      throw new Error('No profile data returned')
     }
 
-    return {
-      avatar_url: userData.avatar_url,
-      name: userData.name,
-      login: userData.login,
-      bio: userData.bio,
-      blog: userData.blog,
-      twitter_username: userData.twitter_username,
-      followers: userData.followers,
-      following: userData.following,
-      created_at: userData.created_at,
-    }
+    return response
   }
-  catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  catch (error: any) {
+    console.error(`Error fetching profile for ${username}:`, error)
     throw createError({
-      statusCode: (error as GitHubError).status || 500,
-      message: (error as Error).message || 'Failed to fetch user profile',
+      statusCode: error.response?.status || 401,
+      message: error.response?.statusText || 'GitHub authentication failed',
     })
   }
 }
 
 /**
- * Fetches and caches a user's repositories
- * @param username - GitHub username
- * @param owner - Repository owner
- * @returns Array of repository data
- * @cache 10 minutes with stale-while-revalidate
+ * Retrieves a user's repositories with caching
+ * @param username - GitHub username to fetch repos for
+ * @param owner - Repository owner (can be different from username)
+ * @returns Array of repository data, cached for 10 minutes
  */
 export const fetchUserRepositories = defineCachedFunction(async (_event: H3Event, username: string, owner: string) => {
   const userData = await fetchUserProfile(_event, username)
@@ -91,11 +92,10 @@ export const fetchUserRepositories = defineCachedFunction(async (_event: H3Event
 })
 
 /**
- * Fetches and caches details of a specific repository
+ * Fetches detailed repository information
  * @param owner - Repository owner
  * @param repo - Repository name
- * @returns Repository data
- * @cache 10 minutes with stale-while-revalidate
+ * @returns Repository metadata and stats
  */
 export const fetchRepository = defineCachedFunction(async (_event: H3Event, username: string, owner: string, repo: string) => {
   const { data: repository } = await useOctokit().request('GET /repos/{owner}/{repo}', {
@@ -112,11 +112,10 @@ export const fetchRepository = defineCachedFunction(async (_event: H3Event, user
 })
 
 /**
- * Fetches and caches recent activity events for a repository
+ * Gets recent activity events for a repository
  * @param owner - Repository owner
  * @param repo - Repository name
- * @returns Array of activity events
- * @cache 10 minutes with stale-while-revalidate
+ * @returns Recent repository events
  */
 export const fetchUserActivity = defineCachedFunction(async (_event: H3Event, username: string, owner: string, repo: string) => {
   const { data: activity } = await useOctokit().request('GET /repos/{owner}/{repo}/events', {
@@ -133,12 +132,11 @@ export const fetchUserActivity = defineCachedFunction(async (_event: H3Event, us
 })
 
 /**
- * Fetches and caches details of a specific commit
+ * Retrieves commit history with context
  * @param owner - Repository owner
  * @param repo - Repository name
- * @param sha - Commit SHA
- * @returns Commit data
- * @cache 10 minutes with stale-while-revalidate
+ * @param sha - Commit hash to fetch
+ * @returns Commit data including changes and comments
  */
 export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, username: string, owner: string, repo: string, sha: string) => {
   const { data: commit } = await useOctokit().request('GET /repos/{owner}/{repo}/commits/{sha}', {
@@ -156,12 +154,10 @@ export const fetchCommitHistory = defineCachedFunction(async (_event: H3Event, u
 })
 
 /**
- * Aggregates and caches comprehensive user statistics
- * Combines profile, repositories, activity, and latest commit data
- * @param username - GitHub username
- * @returns Combined user statistics
- * @throws Error if repositories, activity, or commits are not found
- * @cache 10 minutes with stale-while-revalidate
+ * Aggregates comprehensive GitHub stats for analysis
+ * Combines profile, repo, and activity data
+ * @param username - Target GitHub user
+ * @returns Combined activity statistics
  */
 export const fetchUserStats = defineCachedFunction(async (_event: H3Event, username: string) => {
   try {
@@ -240,12 +236,9 @@ export const fetchUserStats = defineCachedFunction(async (_event: H3Event, usern
 })
 
 /**
- * Fetches social network activity and growth metrics
- * @param username GitHub username
- * @returns Object containing:
- * - Current follower/following counts
- * - Recent social events (follows, watches, etc.)
- * - Interaction patterns with other users
+ * Analyzes social network growth and interactions
+ * @param username - Target GitHub user
+ * @returns Social engagement metrics and trends
  */
 export const fetchSocialTrends = defineCachedFunction(async (_event: H3Event, username: string) => {
   const octokit = useOctokit()
@@ -282,13 +275,9 @@ export const fetchSocialTrends = defineCachedFunction(async (_event: H3Event, us
 })
 
 /**
- * Fetches and analyzes user's coding behavior patterns
- * Used for spirit animal matching and activity profiling
- * @param username GitHub username
- * @returns Object containing categorized activity metrics:
- * - Commit patterns and frequency
- * - PR creation and review activity
- * - Issue participation and comments
+ * Analyzes coding patterns and behavior
+ * @param username - Target GitHub user
+ * @returns Categorized activity metrics for analysis
  */
 export const fetchActivityMetrics = defineCachedFunction(async (_event: H3Event, username: string) => {
   try {

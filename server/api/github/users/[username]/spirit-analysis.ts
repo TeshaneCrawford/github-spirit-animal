@@ -1,12 +1,10 @@
+/** Spirit animal analysis endpoint - Determines user's GitHub work patterns */
+
 import type { SpiritAnimalProfile, UserActivity, DailyActivity, GitHubEvent, GitHubError } from '~~/types/github'
 import { fetchUserStats, fetchActivityMetrics } from '~~/server/utils/github'
 import { analyzeGitHubSpirit, determineActivityPattern, calculateConsistency } from '~~/server/utils/animal-analyser'
-import { checkRateLimit } from '~~/server/utils/rate-limit'
 
-/**
- * Aggregates user's GitHub contributions into activity metrics
- * Tracks different types of contributions for spirit animal analysis
- */
+/** Activity aggregation for behavior analysis */
 function calculateCurrentActivity(activity: GitHubEvent[], repoCount: number): UserActivity {
   return {
     commits: activity.filter(e => e.type === 'PushEvent').length,
@@ -19,10 +17,7 @@ function calculateCurrentActivity(activity: GitHubEvent[], repoCount: number): U
   }
 }
 
-/**
- * Creates a 2D activity intensity map
- * Used to determine user's work patterns and schedule preferences
- */
+/** Temporal activity mapping for pattern detection */
 function generateActivityHeatmap(events: GitHubEvent[]): DailyActivity[] {
   return events.reduce((acc: DailyActivity[], event) => {
     if (!event.created_at) return acc
@@ -41,14 +36,7 @@ function generateActivityHeatmap(events: GitHubEvent[]): DailyActivity[] {
   }, [])
 }
 
-/**
- * Spirit Animal Analysis Endpoint
- * Analyzes GitHub user activity patterns and assigns spirit animals based on:
- * - Activity timing (diurnal/nocturnal patterns)
- * - Contribution consistency
- * - Collaboration patterns
- * - Work style and preferences
- */
+// Main handler with improved error handling
 export default defineEventHandler(async (event): Promise<SpiritAnimalProfile> => {
   const username = getRouterParam(event, 'username')
   if (!username) {
@@ -70,25 +58,6 @@ export default defineEventHandler(async (event): Promise<SpiritAnimalProfile> =>
 
   try {
     console.log('Starting spirit analysis for:', username)
-
-    // Check rate limit with better error handling
-    try {
-      await checkRateLimit(event)
-    }
-    catch (error) {
-      console.error('Rate limit error:', error)
-      const rateLimitError = error as GitHubError
-      if (rateLimitError.message?.includes('Bad credentials')) {
-        throw createError({
-          statusCode: 401,
-          message: 'Invalid GitHub token',
-        })
-      }
-      throw createError({
-        statusCode: 429,
-        message: 'GitHub API rate limit exceeded. Please try again later.',
-      })
-    }
 
     const [stats, activityMetrics] = await Promise.all([
       fetchUserStats(event, username).catch((err) => {
