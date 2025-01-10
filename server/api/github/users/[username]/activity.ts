@@ -123,11 +123,12 @@ export default defineEventHandler(async (event): Promise<EnhancedActivityStats> 
     try {
       await checkRateLimit(event)
     }
-    catch (rateLimitError) {
-      console.error('Rate limit error:', rateLimitError)
+    catch (error) {
+      console.error('Rate limit error:', error)
+      const rateLimitError = error as GitHubError
       throw createError({
-        statusCode: 429,
-        message: 'GitHub API rate limit exceeded. Please try again later.',
+        statusCode: rateLimitError.status || 429,
+        message: rateLimitError.message || 'GitHub API rate limit exceeded. Please try again later.',
       })
     }
 

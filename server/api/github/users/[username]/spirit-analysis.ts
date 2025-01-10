@@ -58,12 +58,37 @@ export default defineEventHandler(async (event): Promise<SpiritAnimalProfile> =>
     })
   }
 
+  // Validate GitHub token
+  const config = useRuntimeConfig()
+  if (!config.githubToken) {
+    console.error('Missing GitHub token in configuration')
+    throw createError({
+      statusCode: 401,
+      message: 'GitHub authentication not configured',
+    })
+  }
+
   try {
     console.log('Starting spirit analysis for:', username)
 
-    // Check rate limit first
-    const rateLimit = await checkRateLimit(event)
-    console.log('Rate limit status:', rateLimit)
+    // Check rate limit with better error handling
+    try {
+      await checkRateLimit(event)
+    }
+    catch (error) {
+      console.error('Rate limit error:', error)
+      const rateLimitError = error as GitHubError
+      if (rateLimitError.message?.includes('Bad credentials')) {
+        throw createError({
+          statusCode: 401,
+          message: 'Invalid GitHub token',
+        })
+      }
+      throw createError({
+        statusCode: 429,
+        message: 'GitHub API rate limit exceeded. Please try again later.',
+      })
+    }
 
     const [stats, activityMetrics] = await Promise.all([
       fetchUserStats(event, username).catch((err) => {
@@ -132,16 +157,20 @@ export default defineEventHandler(async (event): Promise<SpiritAnimalProfile> =>
     return result
   }
   catch (error: unknown) {
-    console.error('Spirit analysis complete error:', error)
+    console.error('Spirit analysis error:', error)
     const githubError = error as GitHubError
 
-    // Provide more specific error messages
-    const errorMessage = githubError.response?.data?.message
-      || githubError.message
-      || 'Failed to analyze GitHub activity'
+    // Improved error handling with specific status codes
+    const statusCode = githubError.status
+      || githubError.response?.status
+      || (githubError.message?.includes('Bad credentials') ? 401 : 500)
+
+    const errorMessage = statusCode === 401
+      ? 'GitHub authentication failed'
+      : githubError.message || 'Failed to analyze GitHub activity'
 
     throw createError({
-      statusCode: githubError.status || githubError.response?.status || 500,
+      statusCode,
       message: errorMessage,
       cause: error,
     })

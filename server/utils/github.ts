@@ -13,8 +13,15 @@ const GITHUB_API_BASE = 'https://api.github.com'
  */
 export function useOctokit() {
   if (!_octokit) {
+    const config = useRuntimeConfig()
+    if (!config.githubToken) {
+      throw createError({
+        statusCode: 401,
+        message: 'GitHub token is not configured',
+      })
+    }
     _octokit = new Octokit({
-      auth: process.env.NUXT_GITHUB_TOKEN,
+      auth: config.githubToken,
     })
   }
   return _octokit
